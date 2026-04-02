@@ -122,7 +122,7 @@ namespace CityBuilder.Rendering.Roads
         /// </summary>
         private GameObject BuildGameObject(RoadSegment seg, RoadMeshData data)
         {
-            GameObject go = new GameObject($"Road_{seg.Id}");
+            GameObject go = new ($"Road_{seg.Id}");
             go.transform.position = new Vector3(0f, roadElevation, 0f);
 
             int roadLayer = LayerMask.NameToLayer("Road");
@@ -131,11 +131,13 @@ namespace CityBuilder.Rendering.Roads
 
             Mesh mesh = BuildMesh(data);
 
-            go.AddComponent<MeshFilter>().sharedMesh          = mesh;
-            go.AddComponent<MeshCollider>().sharedMesh         = mesh;
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            go.AddComponent<MeshCollider>().sharedMesh = mesh;
 
-            MeshRenderer mr                 = go.AddComponent<MeshRenderer>();
-            mr.sharedMaterials              = BuildMaterialArray(data.Triangles.Length);
+            MeshRenderer mr = go.AddComponent<MeshRenderer>();
+            mr.sharedMaterials = BuildMaterialArray(data.Triangles.Length);
+
+            mesh.UploadMeshData(markNoLongerReadable: true);
 
             return go;
         }
@@ -145,7 +147,7 @@ namespace CityBuilder.Rendering.Roads
         /// </summary>
         private static Mesh BuildMesh(RoadMeshData data)
         {
-            Mesh mesh         = new Mesh();
+            Mesh mesh         = new ();
             mesh.name         = "RoadMesh";
             mesh.indexFormat  = UnityEngine.Rendering.IndexFormat.UInt32;  // Supports > 65k vertices
             mesh.SetVertices(data.Vertices);
@@ -157,7 +159,6 @@ namespace CityBuilder.Rendering.Roads
                 mesh.SetTriangles(data.Triangles[i], i);
 
             mesh.RecalculateBounds();
-            mesh.UploadMeshData(markNoLongerReadable: true);
             return mesh;
         }
 
