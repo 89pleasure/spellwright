@@ -39,7 +39,7 @@ namespace CityBuilder.Tools
 
             if (!IsActive || !ms.leftButton.wasPressedThisFrame) return;
 
-            if (_camera == null)
+            if (!_camera)
             {
                 Debug.LogError("[BulldozerTool] _camera is null!");
                 return;

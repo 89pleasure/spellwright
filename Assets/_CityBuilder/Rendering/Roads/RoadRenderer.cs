@@ -1,7 +1,6 @@
 using CityBuilder.Core;
 using CityBuilder.Core.EventBus;
 using CityBuilder.Infrastructure.Roads;
-using Unity.Mathematics;
 using UnityEngine;
 
 #nullable enable
@@ -65,13 +64,18 @@ namespace CityBuilder.Rendering.Roads
             bus.Subscribe<RoadDemolishedEvent>(this);
 
             foreach (RoadSegment seg in GameServices.Instance.Roads.Graph.Segments.Values)
+            {
                 SpawnSegmentMesh(seg);
+            }
         }
 
         public void Handle(RoadBuiltEvent evt)
         {
             if (!GameServices.Instance!.Roads.Graph.Segments.TryGetValue(evt.SegmentId, out RoadSegment seg))
+            {
                 return;
+            }
+
             SpawnSegmentMesh(seg);
         }
 
@@ -80,9 +84,10 @@ namespace CityBuilder.Rendering.Roads
         public void RebuildSegment(int segmentId)
         {
             Registry?.Unregister(segmentId);
-
             if (GameServices.Instance!.Roads.Graph.Segments.TryGetValue(segmentId, out RoadSegment seg))
+            {
                 SpawnSegmentMesh(seg);
+            }
         }
 
         // ─────────────────────────────────────────────────────────
@@ -91,7 +96,7 @@ namespace CityBuilder.Rendering.Roads
 
         private void SpawnSegmentMesh(RoadSegment seg)
         {
-            if (roadProfile == null || Registry == null)
+            if (!roadProfile || Registry == null)
                 return;
 
             RoadGraph graph = GameServices.Instance!.Roads.Graph;
@@ -111,27 +116,36 @@ namespace CityBuilder.Rendering.Roads
         /// <summary>
         /// Creates a GameObject with MeshFilter, MeshRenderer, and MeshCollider.
         ///
-        /// UploadMeshData is called inside BuildMesh – before the MeshCollider is
-        /// assigned – so Unity can bake the physics data from CPU memory that is
-        /// still available at that point. Calling UploadMeshData after setting
-        /// sharedMesh discards CPU data before the bake completes and results in
-        /// a collider with no geometry (invisible to raycasts).
+        /// The MeshCollider is assigned before UploadMeshData so that Unity bakes
+        /// physics geometry from CPU-resident data. UploadMeshData is called
+        /// afterwards to push the mesh to the GPU for rendering.
         /// </summary>
         private GameObject BuildGameObject(RoadSegment seg, RoadMeshData data)
         {
-            GameObject go = new($"Road_{seg.Id}");
-            go.transform.position = new Vector3(0f, roadElevation, 0f);
+            GameObject go = new($"Road_{seg.Id}")
+            {
+                transform =
+                {
+                    position = new Vector3(0f, roadElevation, 0f)
+                }
+            };
 
             int roadLayer = LayerMask.NameToLayer("Road");
             if (roadLayer != -1)
+            {
                 go.layer = roadLayer;
+            }
 
-            // BuildMesh calls UploadMeshData internally before returning,
-            // so the MeshCollider below receives a fully baked mesh.
             Mesh mesh = BuildMesh(data);
 
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
+
+            // Assign collider while mesh data is still CPU-resident so PhysX can
+            // bake collision geometry synchronously.
             go.AddComponent<MeshCollider>().sharedMesh = mesh;
+
+            // Upload to GPU for rendering after the collider bake is complete.
+            mesh.UploadMeshData(markNoLongerReadable: false);
 
             MeshRenderer mr = go.AddComponent<MeshRenderer>();
             mr.sharedMaterials = BuildMaterialArray(data.Triangles.Length);
@@ -141,24 +155,26 @@ namespace CityBuilder.Rendering.Roads
 
         /// <summary>
         /// Populates a Unity Mesh from the plain vertex arrays produced by RoadMeshBuilder.
-        /// UploadMeshData is called here so CPU-side data is still present when the
-        /// MeshCollider assigned in BuildGameObject bakes its physics geometry.
+        /// Does not call UploadMeshData – the caller handles that after assigning the MeshCollider.
         /// </summary>
         private static Mesh BuildMesh(RoadMeshData data)
         {
-            Mesh mesh        = new();
-            mesh.name        = "RoadMesh";
-            mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            Mesh mesh = new()
+            {
+                name = "RoadMesh",
+                indexFormat = UnityEngine.Rendering.IndexFormat.UInt32
+            };
             mesh.SetVertices(data.Vertices);
             mesh.SetNormals(data.Normals);
             mesh.SetUVs(0, data.UVs);
 
             mesh.subMeshCount = data.Triangles.Length;
             for (int i = 0; i < data.Triangles.Length; i++)
+            {
                 mesh.SetTriangles(data.Triangles[i], i);
+            }
 
             mesh.RecalculateBounds();
-            mesh.UploadMeshData(markNoLongerReadable: true);
             return mesh;
         }
 
@@ -169,15 +185,18 @@ namespace CityBuilder.Rendering.Roads
             {
                 mats[i] = i < roadMaterials.Length
                     ? roadMaterials[i]
-                    : roadMaterials[roadMaterials.Length - 1];
+                    : roadMaterials[^1];
             }
+
             return mats;
         }
 
         private void OnDestroy()
         {
             if (GameServices.Instance == null)
+            {
                 return;
+            }
 
             EventBus bus = GameServices.Instance.Bus;
             bus.Unsubscribe<RoadBuiltEvent>(this);

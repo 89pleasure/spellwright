@@ -45,22 +45,21 @@ namespace CityBuilder.Infrastructure.Roads
         ///   1. Snap to the nearest existing node within SnapRadius.
         ///   2. If no node is nearby but an existing segment is, split that segment
         ///      and use the resulting T-junction node.
-        ///   3. Otherwise create a new isolated node at the given position.
+        ///   3. Otherwise, create a new isolated node at the given position.
         ///
         /// Returns null if both endpoints resolve to the same node (zero-length road).
         /// </summary>
-        public RoadSegment? BuildRoad(
+        public void BuildRoad(
             float3 from,
             float3 to,
-            float  gameTime,
-            int    lanes      = 2,
-            float  speedLimit = 50f)
+            float gameTime,
+            int lanes = 2,
+            float speedLimit = 50f)
         {
             RoadNode nodeA = ResolveOrCreateNode(from, gameTime, lanes, speedLimit);
-            RoadNode nodeB = ResolveOrCreateNode(to,   gameTime, lanes, speedLimit);
+            RoadNode nodeB = ResolveOrCreateNode(to, gameTime, lanes, speedLimit);
 
-            if (nodeA.Id == nodeB.Id)
-                return null;
+            if (nodeA.Id == nodeB.Id) { return; }
 
             // Default control points for a straight road: ⅓ and ⅔ along the line.
             // The Bézier degenerates to a straight line – no special-casing needed elsewhere.
@@ -68,14 +67,12 @@ namespace CityBuilder.Infrastructure.Roads
             float3 controlB = math.lerp(nodeA.Position, nodeB.Position, 2f / 3f);
 
             RoadSegment? segment = Graph.AddSegment(nodeA.Id, nodeB.Id, controlA, controlB, lanes, speedLimit);
-            if (segment == null)
-                return null;
+            if (segment == null) { return; }
 
             Graph.MarkDirty(nodeA.Id);
             Graph.MarkDirty(nodeB.Id);
 
             _eventBus.Publish(new RoadBuiltEvent(segment.Id, nodeA.Id, nodeB.Id, gameTime));
-            return segment;
         }
 
         // ─────────────────────────────────────────────────────────
@@ -88,8 +85,9 @@ namespace CityBuilder.Infrastructure.Roads
         /// </summary>
         public bool DemolishRoad(int segmentId, float gameTime)
         {
-            if (!Graph.Segments.TryGetValue(segmentId, out RoadSegment segment))
+            if (!Graph.Segments.TryGetValue(segmentId, out RoadSegment segment)) {
                 return false;
+            }
 
             int nodeAId = segment.NodeA;
             int nodeBId = segment.NodeB;
@@ -128,35 +126,37 @@ namespace CityBuilder.Infrastructure.Roads
         /// </summary>
         private RoadNode ResolveOrCreateNode(float3 position, float gameTime, int lanes, float speedLimit)
         {
-            // 1. Snap to existing node
+            // Snap to existing node
             RoadNode? nearNode = Graph.FindNearestNode(position, SnapRadius);
             if (nearNode != null)
-                return nearNode;
-
-            // 2. T-junction: endpoint lands on an existing segment
-            (RoadSegment segment, float t)? hit = Graph.FindNearestSegment(position, SnapRadius);
-            if (hit != null && hit.Value.t > SplitEdgeGuard && hit.Value.t < 1f - SplitEdgeGuard)
             {
-                int oldSegmentId = hit.Value.segment.Id;
-                int oldNodeA     = hit.Value.segment.NodeA;
-                int oldNodeB     = hit.Value.segment.NodeB;
-
-                RoadNode junctionNode = Graph.SplitSegment(oldSegmentId, hit.Value.t);
-
-                // Notify listeners: the original segment is replaced by two halves
-                _eventBus.Publish(new RoadDemolishedEvent(oldSegmentId, oldNodeA, oldNodeB, gameTime));
-                foreach (int segId in junctionNode.SegmentIds)
-                {
-                    if (Graph.Segments.TryGetValue(segId, out RoadSegment half))
-                        _eventBus.Publish(new RoadBuiltEvent(half.Id, half.NodeA, half.NodeB, gameTime));
-                }
-
-                Graph.MarkDirty(junctionNode.Id);
-                return junctionNode;
+                return nearNode;
             }
 
-            // 3. Fresh node
-            return Graph.AddNode(position);
+            (RoadSegment segment, float t)? hit = Graph.FindNearestSegment(position, SnapRadius);
+            if (hit is not { t: > SplitEdgeGuard } || !(hit.Value.t < 1f - SplitEdgeGuard))
+            {
+                return Graph.AddNode(position);
+            }
+
+            int oldSegmentId = hit.Value.segment.Id;
+            int oldNodeA = hit.Value.segment.NodeA;
+            int oldNodeB = hit.Value.segment.NodeB;
+
+            RoadNode junctionNode = Graph.SplitSegment(oldSegmentId, hit.Value.t);
+
+            // Notify listeners: the original segment is replaced by two halves
+            _eventBus.Publish(new RoadDemolishedEvent(oldSegmentId, oldNodeA, oldNodeB, gameTime));
+            foreach (int segId in junctionNode.SegmentIds)
+            {
+                if (Graph.Segments.TryGetValue(segId, out RoadSegment half))
+                {
+                    _eventBus.Publish(new RoadBuiltEvent(half.Id, half.NodeA, half.NodeB, gameTime));
+                }
+            }
+
+            Graph.MarkDirty(junctionNode.Id);
+            return junctionNode;
         }
     }
 }

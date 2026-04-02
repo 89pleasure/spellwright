@@ -25,9 +25,11 @@ namespace CityBuilder
 
         private void CreateFlatTerrain()
         {
-            TerrainData data = new TerrainData();
-            data.heightmapResolution = 257; // 2^8 + 1
-            data.size = new Vector3(terrainSize, 600, terrainSize);
+            TerrainData data = new ()
+            {
+                heightmapResolution = 257, // 2^8 + 1
+                size = new Vector3(terrainSize, 600, terrainSize)
+            };
             // Heights default to 0 → perfectly flat
 
             GameObject terrainGo = Terrain.CreateTerrainGameObject(data);
@@ -37,7 +39,7 @@ namespace CityBuilder
             Shader flatShader = Shader.Find("CityBuilder/FlatShading");
             if (flatShader != null)
             {
-                Material mat = new Material(flatShader);
+                Material mat = new (flatShader);
                 mat.SetColor("_BaseColor", terrainColor);
                 terrainGo.GetComponent<Terrain>().materialTemplate = mat;
             }

@@ -65,7 +65,7 @@ namespace CityBuilder.Tools
                 return;
             }
 
-            Vector3? worldPos = RaycastTerrain(ms.position.ReadValue());
+            Vector3? worldPos = RaycastTerrain(ms.position.value);
 
             UpdatePreview(worldPos);
 

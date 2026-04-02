@@ -16,16 +16,16 @@ namespace CityBuilder.Rendering.Roads
         private void Start()
         {
             if (bulldozerTool == null)
-                bulldozerTool = FindObjectOfType<BulldozerTool>();
-
-            if (roadRenderer == null)
-                roadRenderer = FindObjectOfType<RoadRenderer>();
+                bulldozerTool = FindAnyObjectByType<BulldozerTool>();
 
             if (bulldozerTool == null)
             {
                 Debug.LogError("[RoadDemolishHandler] BulldozerTool not found!", this);
                 return;
             }
+
+            if (roadRenderer == null)
+                roadRenderer = FindAnyObjectByType<RoadRenderer>();
 
             if (roadRenderer == null)
             {
@@ -40,13 +40,24 @@ namespace CityBuilder.Rendering.Roads
 
         private void Update()
         {
-            if (bulldozerTool == null || roadRenderer?.Registry == null) return;
+            if (!bulldozerTool || roadRenderer?.Registry == null) { return; }
             if (!bulldozerTool.IsActive) { roadRenderer.Registry.ClearHighlight(); return; }
 
             Mouse ms = Mouse.current;
-            if (ms == null || _camera == null) { roadRenderer.Registry.ClearHighlight(); return; }
+            if (ms == null || !_camera) { roadRenderer.Registry.ClearHighlight(); return; }
 
             Ray ray = _camera.ScreenPointToRay(ms.position.value);
+            int roadMask = LayerMask.GetMask("Road");
+
+            if (Physics.Raycast(ray, out RaycastHit roadHit, 1000f, roadMask))
+            {
+                Debug.Log($"[RoadOnly] Hit {roadHit.collider.gameObject.name}");
+            }
+            else
+            {
+                Debug.Log("[RoadOnly] Miss");
+            }
+
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
                 if (roadRenderer.Registry.TryGetId(hit.collider.gameObject, out int segId))
@@ -55,7 +66,7 @@ namespace CityBuilder.Rendering.Roads
                 }
                 else
                 {
-                    // Hit something but it's not a road – log once per new object
+                    // Hit something, but it's not a road – log once per new object
                     Debug.Log($"[RoadDemolishHandler] Hover hit '{hit.collider.gameObject.name}' – not in Registry.");
                     roadRenderer.Registry.ClearHighlight();
                 }

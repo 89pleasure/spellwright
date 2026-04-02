@@ -79,7 +79,7 @@ namespace CityBuilder.Infrastructure.Roads
             if (!_nodes.TryGetValue(nodeAId, out RoadNode? nodeA)) return null;
             if (!_nodes.TryGetValue(nodeBId, out RoadNode? nodeB)) return null;
 
-            RoadSegment seg = new RoadSegment(
+            RoadSegment seg = new (
                 _nextSegmentId++,
                 nodeAId, nodeBId,
                 nodeA.Position, nodeB.Position,
@@ -94,10 +94,12 @@ namespace CityBuilder.Infrastructure.Roads
             return seg;
         }
 
-        public bool RemoveSegment(int segmentId)
+        public void RemoveSegment(int segmentId)
         {
             if (!_segments.TryGetValue(segmentId, out RoadSegment? seg))
-                return false;
+            {
+                return;
+            }
 
             if (_nodes.TryGetValue(seg.NodeA, out RoadNode? nodeA))
             {
@@ -112,7 +114,6 @@ namespace CityBuilder.Infrastructure.Roads
             }
 
             _segments.Remove(segmentId);
-            return true;
         }
 
         // ─────────────────────────────────────────────────────────
@@ -158,13 +159,15 @@ namespace CityBuilder.Infrastructure.Roads
 
             // ── 4. New segment: junction → old end node ──────────────────────
             RoadNode    oldNodeB    = _nodes[oldNodeBId];
-            RoadSegment secondHalf  = new RoadSegment(
+            RoadSegment secondHalf  = new(
                 _nextSegmentId++,
                 splitNode.Id, oldNodeBId,
                 splitPos, oldNodeB.Position,
                 rightP1, rightP2,
-                seg.Lanes, seg.SpeedLimit);
-            secondHalf.ParentSegmentId = segmentId;
+                seg.Lanes, seg.SpeedLimit)
+            {
+                ParentSegmentId = segmentId
+            };
 
             _segments[secondHalf.Id] = secondHalf;
             splitNode.SegmentIds.Add(secondHalf.Id);
@@ -197,7 +200,7 @@ namespace CityBuilder.Infrastructure.Roads
 
             node.OrderedSegmentIds.Clear();
             node.OrderedSegmentIds.AddRange(node.SegmentIds);
-            node.OrderedSegmentIds.Sort((int a, int b) =>
+            node.OrderedSegmentIds.Sort((a, b) =>
                 GetSegmentAngleFrom(a, nodeId).CompareTo(GetSegmentAngleFrom(b, nodeId)));
         }
 
@@ -270,11 +273,13 @@ namespace CityBuilder.Infrastructure.Roads
             foreach (RoadNode node in _nodes.Values)
             {
                 float distSq = math.distancesq(node.Position, position);
-                if (distSq < nearestDistSq)
+                if (!(distSq < nearestDistSq))
                 {
-                    nearestDistSq = distSq;
-                    nearest       = node;
+                    continue;
                 }
+
+                nearestDistSq = distSq;
+                nearest       = node;
             }
 
             return nearest;
@@ -303,12 +308,14 @@ namespace CityBuilder.Infrastructure.Roads
                     position,
                     nodeA.Position, seg.ControlPointA, seg.ControlPointB, nodeB.Position);
 
-                if (result.dist < nearestDist)
+                if (!(result.dist < nearestDist))
                 {
-                    nearestDist = result.dist;
-                    nearestT    = result.t;
-                    nearest     = seg;
+                    continue;
                 }
+
+                nearestDist = result.dist;
+                nearestT    = result.t;
+                nearest     = seg;
             }
 
             return nearest != null ? (nearest, nearestT) : null;
@@ -335,11 +342,13 @@ namespace CityBuilder.Infrastructure.Roads
                 float  t        = i / (float)samples;
                 float3 curvePos = BezierCurve.Evaluate(p0, p1, p2, p3, t);
                 float  dist     = math.distance(point, curvePos);
-                if (dist < bestDist)
+                if (!(dist < bestDist))
                 {
-                    bestDist = dist;
-                    bestT    = t;
+                    continue;
                 }
+
+                bestDist = dist;
+                bestT    = t;
             }
 
             return (bestDist, bestT);

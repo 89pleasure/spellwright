@@ -108,7 +108,7 @@ namespace CityBuilder.Rendering.Roads
                     float        leftX     = stripLeftX[stripIdx];
                     float        rightX    = leftX + strip.Width;
                     float        height    = strip.HeightOffset;
-                    Vector3      origin    = new Vector3(positions[sampleIdx].x, positions[sampleIdx].y, positions[sampleIdx].z);
+                    Vector3      origin    = new (positions[sampleIdx].x, positions[sampleIdx].y, positions[sampleIdx].z);
 
                     int leftIdx  = SampleStripVertex(sampleIdx, stripIdx, 0, stripCount);
                     int rightIdx = SampleStripVertex(sampleIdx, stripIdx, 1, stripCount);
