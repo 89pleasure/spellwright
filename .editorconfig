@@ -1,0 +1,83 @@
+root = true
+
+[*.cs]
+indent_style             = space
+indent_size              = 4
+end_of_line              = lf
+charset                  = utf-8-bom
+trim_trailing_whitespace = true
+insert_final_newline     = true
+
+# ── Naming conventions ────────────────────────────────────────────────────────
+
+# Private fields: _camelCase
+dotnet_naming_rule.private_fields.symbols              = private_field_symbols
+dotnet_naming_rule.private_fields.style                = underscore_camel_case
+dotnet_naming_rule.private_fields.severity             = warning
+
+dotnet_naming_symbols.private_field_symbols.applicable_kinds          = field
+dotnet_naming_symbols.private_field_symbols.applicable_accessibilities = private
+
+dotnet_naming_style.underscore_camel_case.capitalization  = camel_case
+dotnet_naming_style.underscore_camel_case.required_prefix = _
+
+# Constants: PascalCase
+dotnet_naming_rule.constants.symbols  = constant_symbols
+dotnet_naming_rule.constants.style    = pascal_case_style
+dotnet_naming_rule.constants.severity = warning
+
+dotnet_naming_symbols.constant_symbols.applicable_kinds     = field
+dotnet_naming_symbols.constant_symbols.required_modifiers   = const
+
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case
+
+# ── Code style ────────────────────────────────────────────────────────────────
+
+dotnet_style_qualification_for_field                            = false:warning
+dotnet_style_qualification_for_property                         = false:warning
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:warning
+dotnet_style_explicit_tuple_names                               = true:warning
+dotnet_style_object_initializer                                 = true:suggestion
+dotnet_style_collection_initializer                             = true:suggestion
+
+csharp_prefer_braces                                            = true:warning
+csharp_style_pattern_matching_over_as_with_null_check           = true:warning
+csharp_style_var_for_built_in_types                             = false:warning
+csharp_style_var_when_type_is_apparent                          = false:warning
+csharp_style_var_elsewhere                                      = false:warning
+csharp_style_expression_bodied_methods                          = when_on_single_line:warning
+csharp_style_expression_bodied_properties                       = when_on_single_line:warning
+csharp_style_throw_expression                                   = true:suggestion
+csharp_style_unused_value_assignment_preference                 = discard_variable:suggestion
+
+# Unused usings
+dotnet_diagnostic.IDE0005.severity = warning
+
+# ── CA rule suppressions (library API rules – not applicable to game code) ───
+
+# CA1016: Assembly version attribute – irrelevant for game executables
+dotnet_diagnostic.CA1016.severity = none
+# CA1051: Visible instance fields – idiomatic in ECS-style game data structs
+dotnet_diagnostic.CA1051.severity = none
+# CA1711: Type name suffix (Queue/Collection etc.) – fine for game internals
+dotnet_diagnostic.CA1711.severity = none
+# CA1716/CA1720: Identifier conflicts with keywords/type names –
+#   Unity's own API uses Object, math etc. by design; our stubs mirror that.
+dotnet_diagnostic.CA1716.severity = none
+dotnet_diagnostic.CA1720.severity = none
+# CA1822: Mark member as static – Unity message functions (Awake, OnDestroy etc.)
+#   must be instance methods; the engine calls them by name on the instance.
+dotnet_diagnostic.CA1822.severity = none
+# CS1591: Missing XML documentation comments – not required for game code
+dotnet_diagnostic.CS1591.severity = none
+
+# ── Formatting ────────────────────────────────────────────────────────────────
+
+csharp_new_line_before_open_brace                                      = all
+csharp_new_line_before_else                                            = true
+csharp_new_line_before_catch                                           = true
+csharp_new_line_before_finally                                         = true
+csharp_space_after_keywords_in_control_flow_statements                 = true
+csharp_space_between_method_declaration_parameter_list_parentheses     = false
+csharp_space_between_method_call_parameter_list_parentheses            = false
+csharp_preserve_single_line_statements                                  = false

@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="toolbar" class="toolbar">
+        <ui:Button name="btn-road" class="tool-button">
+            <ui:Label text="🛣" class="tool-button__icon" />
+            <ui:Label text="Straße" class="tool-button__label" />
+        </ui:Button>
+        <ui:Button name="btn-bulldozer" class="tool-button">
+            <ui:Label text="🏗" class="tool-button__icon" />
+            <ui:Label text="Abriss" class="tool-button__label" />
+        </ui:Button>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,73 @@
+/* ── Toolbar container ─────────────────────────────────────────────────── */
+.toolbar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 16px;
+
+    background-color: rgba(18, 18, 20, 0.93);
+    border-top-width: 1px;
+    border-top-color: rgba(255, 255, 255, 0.07);
+}
+
+/* ── Tool button ───────────────────────────────────────────────────────── */
+.tool-button {
+    width: 64px;
+    height: 64px;
+    margin: 0 4px;
+    padding: 6px 4px;
+
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    background-color: rgb(42, 42, 46);
+    border-width: 0;
+    border-radius: 6px;
+
+    /* Remove Unity's default button chrome */
+    -unity-overflow-clip-box: content-box;
+}
+
+.tool-button:hover {
+    background-color: rgb(58, 58, 64);
+}
+
+.tool-button:active {
+    background-color: rgb(35, 35, 38);
+}
+
+.tool-button--active {
+    background-color: rgb(204, 122, 28);
+    border-width: 0;
+}
+
+.tool-button--active:hover {
+    background-color: rgb(220, 138, 40);
+}
+
+/* ── Button contents ───────────────────────────────────────────────────── */
+.tool-button__icon {
+    font-size: 22px;
+    -unity-text-align: middle-center;
+    color: rgb(210, 210, 215);
+    margin-bottom: 2px;
+}
+
+.tool-button__label {
+    font-size: 10px;
+    -unity-text-align: middle-center;
+    color: rgb(170, 170, 175);
+    -unity-font-style: normal;
+}
+
+.tool-button--active .tool-button__icon,
+.tool-button--active .tool-button__label {
+    color: rgb(255, 255, 255);
+}

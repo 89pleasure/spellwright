@@ -62,6 +62,9 @@ Tools/bin/
 
 # Crash reports
 sysinfo.txt
+mono_crash.*
+*/mono_crash.*
 
 # Burst AOT
 /BurstDebugInformation_DoNotShip/
+
