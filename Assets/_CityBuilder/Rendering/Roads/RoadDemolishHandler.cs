@@ -25,10 +25,10 @@ namespace CityBuilder.Rendering.Roads
         {
             // Auto-resolve if not wired in the Inspector
             if (bulldozerTool == null)
-                bulldozerTool = FindObjectOfType<BulldozerTool>();
+                bulldozerTool = FindAnyObjectByType<BulldozerTool>();
 
             if (roadRenderer == null)
-                roadRenderer = FindObjectOfType<RoadRenderer>();
+                roadRenderer = FindAnyObjectByType<RoadRenderer>();
 
             if (bulldozerTool == null)
             {
