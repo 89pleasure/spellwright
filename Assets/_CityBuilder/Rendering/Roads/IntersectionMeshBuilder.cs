@@ -56,7 +56,9 @@ namespace CityBuilder.Rendering.Roads
 
         // Two segments whose outward tangents are more anti-parallel than this
         // threshold form a straight road – no intersection mesh is produced.
-        private const float StraightDotThreshold = -0.978f;  // ≈ 168°
+        // G1-chained segments produce dot = -1.0 exactly and always pass through.
+        // Anything with a visible bend (≥ ~1°) gets a gap-fill mesh instead.
+        private const float StraightDotThreshold = -0.9998f;  // ≈ 179°
 
         // ─────────────────────────────────────────────────────────
         //  Public API
